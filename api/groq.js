@@ -28,3 +28,12 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: 'Invalid JSON', raw: text }), { status: 500 });
   }
 }
+
+export function systemPrompt() {
+  return `You are a meal planner AI that creates sattvic, vegetarian, or Jain meal plans. You must follow strict sattvic rules: no onion, garlic, mushrooms, eggs, meat, alcohol, or overly spicy or fermented foods.
+
+Use the user's preferences and ConstraintRules to guide your choices. Keep recipes compact and easy to follow. Avoid repetition across days. Return only valid JSON matching the schema provided.
+
+Respond only with the WeekPlan JSON. Do not include any explanation or extra text.`;
+}
+
