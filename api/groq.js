@@ -52,7 +52,14 @@ export async function chatJSON(messages, model = process.env.GROQ_MODEL) {
   });
 
   const j = await res.json();
-  const text = j?.choices?.[0]?.message?.content;
+  let text = j?.choices?.[0]?.message?.content;
+
+  // ✅ Remove Markdown code block if present
+  if (text?.startsWith('```json')) {
+    text = text.replace(/^```json/, '').replace(/```$/, '').trim();
+  } else if (text?.startsWith('```')) {
+    text = text.replace(/^```/, '').replace(/```$/, '').trim();
+  }
 
   if (!text || typeof text !== 'string') {
     return new Response(JSON.stringify({ error: 'Invalid JSON', raw: JSON.stringify(j) }), { status: 500 });
@@ -65,4 +72,3 @@ export async function chatJSON(messages, model = process.env.GROQ_MODEL) {
     return new Response(JSON.stringify({ error: 'Invalid JSON', raw: text }), { status: 500 });
   }
 }
-
