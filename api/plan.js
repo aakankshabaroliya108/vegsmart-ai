@@ -10,6 +10,17 @@ function isoDate(d = new Date()) {
 }
 
 export default async function handler(request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
+    });
+  }
+
   try {
     let body = {};
     const contentType = request.headers.get('content-type') || '';
