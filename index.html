@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VegSmart.AI — Sattvic & Jain Meal Planner</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f7faf7;color:#1f2937}
+    header{padding:24px;text-align:center;background:#e8f5e9}
+    h1{margin:0;font-size:24px}
+    .wrap{max-width:920px;margin:24px auto;padding:0 16px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+    label{display:block;font-size:14px;margin:8px 0 4px}
+    input,select,textarea,button{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;font-size:14px}
+    textarea{min-height:90px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{background:#6bbf59;color:#fff;border:none;cursor:pointer}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .muted{font-size:12px;color:#6b7280}
+    pre{white-space:pre-wrap;background:#0b1020;color:#e5e7eb;padding:12px;border-radius:10px;overflow:auto}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌿 VegSmart.AI — Sattvic & Vegetarian Meal Planner</h1>
+    <div class="muted">Pure sattvic by default (no onion/garlic/mushrooms). Personalize with rules like “no gluten / no milk / prefer millet …”.</div>
+  </header>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Diet style</label>
+          <select id="diet">
+            <option>Sattvic</option>
+            <option>Vegetarian</option>
+            <option>Vegan</option>
+            <option>Jain</option>
+          </select>
+        </div>
+        <div>
+          <label>Servings</label>
+          <select id="servings">
+            <option>2</option><option>1</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Cuisines (comma-separated)</label>
+      <input id="cuisines" placeholder="Indian-Gujarati, Italian, Mediterranean" value="Indian-Gujarati, Italian" />
+
+      <label>Avoid ingredients (comma-separated)</label>
+      <input id="avoid" placeholder="soy sauce, eggplant" />
+
+      <label>Custom dietary rules (one per line)</label>
+      <textarea id="rules" placeholder="no gluten
+no milk
+prefer millet instead of rice
+limit oil to 1 tbsp/day"></textarea>
+
+      <div class="row" style="margin-top:10px">
+        <button id="btnPlan" class="btn">Generate Weekly Plan</button>
+        <button id="btnGrocery" class="btn" disabled>Build Grocery List</button>
+      </div>
+      <button id="btnTip" class="btn" style="margin-top:10px">Tip of the Day</button>
+      <div class="muted" style="margin-top:8px">Note: first click may take a few seconds (cold start).</div>
+    </div>
+
+    <div class="card">
+      <h3>Result</h3>
+      <pre id="out">Your results will appear here…</pre>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let lastWeekPlan = null;
+
+    function prefs() {
+      return {
+        diet_style: $('diet').value,
+        cuisines: $('cuisines').value.split(',').map(s=>s.trim()).filter(Boolean),
+        avoid_list: $('avoid').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean),
+        custom_rules_raw: $('rules').value,
+        servings: Number($('servings').value || 2)
+      };
+    }
+
+    async function post(url, payload){
+      const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      if(!r.ok){ const t=await r.text(); throw new Error(t || r.statusText); }
+      return r.json();
+    }
+
+    $('btnPlan').onclick = async () => {
+      $('btnPlan').disabled = true; $('out').textContent = '⏳ Generating weekly plan…';
+      try {
+        const rules = await post('/api/parse-rules', { custom_rules_raw: prefs().custom_rules_raw });
+        const plan = await post('/api/plan', { prefs: prefs(), rules });
+        lastWeekPlan = plan;
+        $('btnGrocery').disabled = false;
+        $('out').textContent = JSON.stringify(plan, null, 2);
+      } catch (e){ $('out').textContent = '❌ ' + e.message; }
+      finally { $('btnPlan').disabled = false; }
+    };
+
+    $('btnGrocery').onclick = async () => {
+      if(!lastWeekPlan){ return; }
+      $('btnGrocery').disabled = true; $('out').textContent = '⏳ Building grocery list…';
+      try {
+        const list = await post('/api/grocery', { week_plan: lastWeekPlan });
+        $('out').textContent = JSON.stringify(list, null, 2);
+      } catch (e){ $('out').textContent = '❌ ' + e.message; }
+      finally { $('btnGrocery').disabled = false; }
+    };
+
+    $('btnTip').onclick = async () => {
+      $('out').textContent = '⏳ Fetching tip…';
+      try {
+        const tip = await (await fetch('/api/tip')).text();
+        $('out').textContent = tip;
+      } catch (e){ $('out').textContent = '❌ ' + e.message; }
+    };
+  </script>
+</body>
+</html>
