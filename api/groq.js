@@ -23,7 +23,6 @@ export async function chatJSON(messages, model = process.env.GROQ_MODEL) {
   const j = await res.json();
   let text = j?.choices?.[0]?.message?.content;
 
-  // ✅ Remove Markdown code block if present
   if (text?.startsWith('```json')) {
     text = text.replace(/^```json/, '').replace(/```$/, '').trim();
   } else if (text?.startsWith('```')) {
@@ -31,13 +30,12 @@ export async function chatJSON(messages, model = process.env.GROQ_MODEL) {
   }
 
   if (!text || typeof text !== 'string') {
-    return new Response(JSON.stringify({ error: 'Invalid JSON', raw: JSON.stringify(j) }), { status: 500 });
+    throw new Error('Invalid JSON from model');
   }
 
   try {
-    const parsed = JSON.parse(text);
-    return new Response(JSON.stringify(parsed));
+    return JSON.parse(text);
   } catch (e) {
-    return new Response(JSON.stringify({ error: 'Invalid JSON', raw: text }), { status: 500 });
+    throw new Error('Failed to parse model response');
   }
 }
