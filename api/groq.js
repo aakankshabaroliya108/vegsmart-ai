@@ -26,6 +26,8 @@ export async function chatJSON(messages) {
 
   const j = await r.json();
   const text = j?.choices?.[0]?.message?.content || '';
+  console.log('Groq raw response:', text);
+
   try {
     const parsed = JSON.parse(text);
     return new Response(JSON.stringify(parsed), { headers: { 'Content-Type': 'application/json' } });
