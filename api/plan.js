@@ -12,7 +12,7 @@ function isoDate(d = new Date()) {
 
 export default async function handler(request) {
   try {
-    const body = await request.json(); // This works in Edge Functions
+    const body = await request.json();
     const day = (body?.day || dowName()).slice(0, 3);
     const prefs = body?.prefs || {};
     const rules = body?.rules || {};
@@ -22,7 +22,7 @@ export default async function handler(request) {
 
     const user = `Create a ONE-DAY plan for ${day}. Constraints: compact recipes, strict sattvic rules, apply user prefs and ConstraintRules. Output ONLY WeekPlan JSON.`;
 
-    const response = await chatJSON([
+    const result = await chatJSON([
       { role: 'system', content: systemPrompt() },
       { role: 'user', content: schema },
       { role: 'user', content: `UserPrefs: ${JSON.stringify(prefs)}` },
@@ -30,7 +30,7 @@ export default async function handler(request) {
       { role: 'user', content: user }
     ]);
 
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export default async function handler(request) {
     });
   } catch (err) {
     console.error('Function error:', err);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+    return new Response(JSON.stringify({ error: 'Internal Server Error', details: err.message }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
