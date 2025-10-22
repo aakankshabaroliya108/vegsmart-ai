@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 export async function POST(req) {
   const { messages, model } = await req.json();
 
