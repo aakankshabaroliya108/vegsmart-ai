@@ -1,5 +1,4 @@
 export const config = { runtime: 'edge' };
-
 import { systemPrompt, chatJSON } from './groq.js';
 
 function dowName(d = new Date()) {
@@ -12,7 +11,16 @@ function isoDate(d = new Date()) {
 
 export default async function handler(request) {
   try {
-    const body = await request.json();
+    let body = {};
+    const contentType = request.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        body = await request.json();
+      } catch {
+        body = {};
+      }
+    }
+
     const day = (body?.day || dowName()).slice(0, 3);
     const prefs = body?.prefs || {};
     const rules = body?.rules || {};
