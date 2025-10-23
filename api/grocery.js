@@ -5,9 +5,9 @@ export default async function handler(request) {
   try {
     const { week_plan } = await request.json();
 
-    if (!week_plan || !week_plan.days) {
+    if (!week_plan || !Array.isArray(week_plan.days) || week_plan.days.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Missing or invalid week_plan' }),
+        JSON.stringify({ error: 'Invalid or missing week_plan data' }),
         {
           status: 400,
           headers: {
