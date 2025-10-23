@@ -48,14 +48,16 @@ export default async function handler(request) {
       "fermented foods", "caffeine", "chocolate", "pickles", "leftovers"
     ];
 
-    const user = `Create a ${days}-DAY sattvic vegetarian meal plan starting from ${day}. Each day must include breakfast, lunch, dinner, and a snack. Use the user's cuisine preference (${prefs.cuisine}) and dietary rules. Strictly exclude ALL of the following ingredients and their substitutes: ${forbidden.join(', ')}. Also exclude anything listed in: ${prefs.avoid}. Do not suggest substitutes for excluded items. Recipes must be wholesome, sattvic, and suitable for spiritual and Ayurvedic lifestyles. Be creative and include innovative, lesser-known vegetarian dishes — avoid repeating meals across days. Use diverse ingredients, regional variations, and seasonal produce. Include detailed recipe steps and unique flavor combinations. Output ONLY valid WeekPlan JSON with ${days} days.`;
+    const user = `Create a ${days}-DAY sattvic vegetarian meal plan starting from ${day}. Each day must include breakfast, lunch, dinner, and a snack. Use the user's cuisine preference (${prefs.cuisine}) and dietary rules. Strictly exclude ALL of the following ingredients and their substitutes: ${forbidden.join(', ')}. Do not mention these ingredients in recipe titles, descriptions, instructions, or anywhere in the output. Do not suggest substitutes for excluded items. Recipes must be wholesome, sattvic, and suitable for spiritual and Ayurvedic lifestyles.
+
+Be creative and include innovative, lesser-known vegetarian dishes — avoid repeating meals across days. Use diverse ingredients, regional variations, and seasonal produce. Each recipe must be complete and self-contained: clearly specify whether ingredients are raw or cooked, and include preparation steps for all components (e.g. how to make salsa, chutney, or dressings). Avoid vague instructions like “serve with rice” — instead, include how to prepare the rice. Output ONLY valid WeekPlan JSON with ${days} days.`;
 
     const result = await chatJSON([
       { role: 'system', content: systemPrompt() },
       { role: 'user', content: schema },
       { role: 'user', content: `UserPrefs: ${JSON.stringify(prefs)}` },
       { role: 'user', content: `ConstraintRules: ${JSON.stringify(rules)}` },
-      { role: 'user', content: `Important: Never include or suggest any of the following: ${forbidden.join(', ')}. These are strictly prohibited in sattvic cooking.` },
+      { role: 'user', content: `Important: Never include or suggest any of the following ingredients or their substitutes: ${forbidden.join(', ')}. These are strictly prohibited in sattvic cooking. Do not mention them in any part of the recipe.` },
       { role: 'user', content: user }
     ]);
 
