@@ -42,7 +42,7 @@ export default async function handler(request) {
 
     const schema = `WeekPlan { week_id: string, start_monday: string, days: [{ dow: "Mon"|"Tue"|"Wed"|"Thu"|"Fri"|"Sat"|"Sun", meals: { breakfast: Recipe, lunch: Recipe, dinner: Recipe, snack: Recipe } }] } Recipe { title: string, description: string, ingredients: { item: string, qty: string }[], steps: string[] }`;
 
-    const user = `Create a ${days}-DAY sattvic vegetarian meal plan starting from ${day}. Strictly exclude the following ingredients: ${prefs.avoid}. Use the user's cuisine preference (${prefs.cuisine}) and dietary rules. Avoid garlic, onion, eggs, and tamasic ingredients if required. Ensure recipes are compact, varied, and culturally appropriate. Output ONLY valid WeekPlan JSON with ${days} days.`;
+    const user = `Create a ${days}-DAY sattvic vegetarian meal plan starting from ${day}. Each day should include breakfast, lunch, dinner, and a snack. Use the user's cuisine preference (${prefs.cuisine}) and dietary rules. Strictly exclude the following ingredients: ${prefs.avoid}. Be creative and include innovative, lesser-known vegetarian dishes — avoid repeating meals across days. Use diverse ingredients, regional variations, and seasonal produce. Include detailed recipe steps and unique flavor combinations. Output ONLY valid WeekPlan JSON with ${days} days.`;
 
     const result = await chatJSON([
       { role: 'system', content: systemPrompt() },
