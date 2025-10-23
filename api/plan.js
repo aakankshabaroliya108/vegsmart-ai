@@ -5,7 +5,9 @@ function dowName(d = new Date()) {
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getUTCDay()];
 }
 function isoDate(d = new Date()) {
-  const y = d.getUTCFullYear(), m = String(d.getUTCMonth() + 1).padStart(2, '0'), dd = String(d.getUTCDate()).padStart(2, '0');
+  const y = d.getUTCFullYear(),
+    m = String(d.getUTCMonth() + 1).padStart(2, '0'),
+    dd = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${dd}`;
 }
 
@@ -35,11 +37,12 @@ export default async function handler(request) {
     const day = (body?.day || dowName()).slice(0, 3);
     const prefs = body?.prefs || {};
     const rules = body?.rules || {};
+    const days = body?.days || 1;
     const todayISO = isoDate();
 
     const schema = `WeekPlan { week_id: string, start_monday: string, days: [{ dow: "Mon"|"Tue"|"Wed"|"Thu"|"Fri"|"Sat"|"Sun", meals: { breakfast: Recipe, lunch: Recipe, dinner: Recipe, snack: Recipe } }] } Recipe { title: string, description: string, ingredients: { item: string, qty: string }[], steps: string[] }`;
 
-    const user = `Create a ONE-DAY plan for ${day}. Constraints: compact recipes, strict sattvic rules, apply user prefs and ConstraintRules. Output ONLY WeekPlan JSON.`;
+    const user = `Create a ${days}-DAY sattvic vegetarian meal plan starting from ${day}. Use the user's cuisine preference (${prefs.cuisine}) and dietary rules. Avoid garlic, onion, and tamasic ingredients if required. Ensure recipes are compact, varied, and culturally appropriate. Output ONLY valid WeekPlan JSON with ${days} days.`;
 
     const result = await chatJSON([
       { role: 'system', content: systemPrompt() },
@@ -58,12 +61,15 @@ export default async function handler(request) {
     });
   } catch (err) {
     console.error('Function error:', err);
-    return new Response(JSON.stringify({ error: 'Internal Server Error', details: err.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+    return new Response(
+      JSON.stringify({ error: 'Internal Server Error', details: err.message }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       }
-    });
+    );
   }
 }
