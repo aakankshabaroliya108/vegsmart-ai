@@ -42,14 +42,20 @@ export default async function handler(request) {
 
     const schema = `WeekPlan { week_id: string, start_monday: string, days: [{ dow: "Mon"|"Tue"|"Wed"|"Thu"|"Fri"|"Sat"|"Sun", meals: { breakfast: Recipe, lunch: Recipe, dinner: Recipe, snack: Recipe } }] } Recipe { title: string, description: string, ingredients: { item: string, qty: string }[], steps: string[] }`;
 
-    const user = `Create a ${days}-DAY sattvic vegetarian meal plan starting from ${day}. Each day should include breakfast, lunch, dinner, and a snack. Use the user's cuisine preference (${prefs.cuisine}) and dietary rules. Strictly exclude the following ingredients: ${prefs.avoid}. Be creative and include innovative, lesser-known vegetarian dishes — avoid repeating meals across days. Use diverse ingredients, regional variations, and seasonal produce. Include detailed recipe steps and unique flavor combinations. Output ONLY valid WeekPlan JSON with ${days} days.`;
+    const forbidden = [
+      "onion", "garlic", "shallots", "scallions", "leeks", "mushrooms",
+      "eggs", "meat", "fish", "alcohol", "gelatin", "rennet", "vinegar",
+      "fermented foods", "caffeine", "chocolate", "pickles", "leftovers"
+    ];
+
+    const user = `Create a ${days}-DAY sattvic vegetarian meal plan starting from ${day}. Each day must include breakfast, lunch, dinner, and a snack. Use the user's cuisine preference (${prefs.cuisine}) and dietary rules. Strictly exclude ALL of the following ingredients and their substitutes: ${forbidden.join(', ')}. Also exclude anything listed in: ${prefs.avoid}. Do not suggest substitutes for excluded items. Recipes must be wholesome, sattvic, and suitable for spiritual and Ayurvedic lifestyles. Be creative and include innovative, lesser-known vegetarian dishes — avoid repeating meals across days. Use diverse ingredients, regional variations, and seasonal produce. Include detailed recipe steps and unique flavor combinations. Output ONLY valid WeekPlan JSON with ${days} days.`;
 
     const result = await chatJSON([
       { role: 'system', content: systemPrompt() },
       { role: 'user', content: schema },
       { role: 'user', content: `UserPrefs: ${JSON.stringify(prefs)}` },
       { role: 'user', content: `ConstraintRules: ${JSON.stringify(rules)}` },
-      { role: 'user', content: `Important: Avoid the following ingredients in all meals: ${prefs.avoid}` },
+      { role: 'user', content: `Important: Never include or suggest any of the following: ${forbidden.join(', ')}. These are strictly prohibited in sattvic cooking.` },
       { role: 'user', content: user }
     ]);
 
