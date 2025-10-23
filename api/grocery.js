@@ -3,19 +3,19 @@ import { systemPrompt, chatJSON } from './groq.js';
 
 export default async function handler(request) {
   try {
-    const { week_plan } = await request.json();
+    const text = await request.text();
+    if (!text) throw new Error('Empty request body');
 
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      throw new Error('Invalid JSON format');
+    }
+
+    const week_plan = parsed?.week_plan;
     if (!week_plan || !Array.isArray(week_plan.days) || week_plan.days.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or missing week_plan data' }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
-        }
-      );
+      throw new Error('Missing or invalid week_plan');
     }
 
     const forbidden = [
